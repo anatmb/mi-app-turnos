@@ -126,39 +126,112 @@ export default function AppointmentForm() {
   const [email, setEmail] = useState("");
   const [telefono, setTelefono] = useState("");
 
-  const handleFinalizarReserva = async (e: React.FormEvent) => {
+  // const handleFinalizarReserva = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!fechaSeleccionada || !horaSeleccionada || !nombre || !email) return;
+
+  //   const fechaFormateada = fechaSeleccionada.toLocaleDateString("es-ES", {
+  //     weekday: "long",
+  //     day: "numeric",
+  //     month: "long",
+  //   });
+
+  //   // ==========================================
+  //   // 1. AQUÍ CONECTAREMOS PRISMA PRÓXIMAMENTE
+  //   // ==========================================
+  //   console.log("Guardando en Neon...", { nombre, email, telefono, fechaSeleccionada, horaSeleccionada });
+
+  //   // ==========================================
+  //   // 2. LOGICA DE ENVÍO A WHATSAPP
+  //   // ==========================================
+  //   // Reemplaza con tu número de teléfono real (con código de país, ej: 549 para Argentina, 34 para España)
+  //   const numeroTelefonoNegocio = "5491123456789"; 
+    
+  //   const mensajeWhatsApp = `Hola, quiero confirmar una cita:\n\n` +
+  //     `👤 *Nombre:* ${nombre}\n` +
+  //     `📅 *Fecha:* ${fechaFormateada}\n` +
+  //     `⏰ *Hora:* ${horaSeleccionada} hs\n` +
+  //     `📞 *Contacto:* ${telefono || "No especificado"}`;
+
+  //   // Codificamos el texto para que sea válido en una URL
+  //   const urlWhatsApp = `https://wa.me/${1127873979}?text=${encodeURIComponent(mensajeWhatsApp)}`;
+    
+  //   // Abre WhatsApp en una nueva pestaña
+  //   window.open(urlWhatsApp, "_blank");
+  // };
+
+const handleFinalizarReserva = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fechaSeleccionada || !horaSeleccionada || !nombre || !email) return;
 
-    const fechaFormateada = fechaSeleccionada.toLocaleDateString("es-ES", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-    });
+    try {
+      // 1. Convertimos la fecha del calendario a formato string YYYY-MM-DD para evitar problemas de zona horaria
+      const anio = fechaSeleccionada.getFullYear();
+      const mes = String(fechaSeleccionada.getMonth() + 1).padStart(2, '0');
+      const dia = String(fechaSeleccionada.getDate()).padStart(2, '0');
+      const fechaFormatoString = `${anio}-${mes}-${dia}`;
 
-    // ==========================================
-    // 1. AQUÍ CONECTAREMOS PRISMA PRÓXIMAMENTE
-    // ==========================================
-    console.log("Guardando en Neon...", { nombre, email, telefono, fechaSeleccionada, horaSeleccionada });
+      console.log("Enviando cita a la base de datos de Neon...");
 
-    // ==========================================
-    // 2. LOGICA DE ENVÍO A WHATSAPP
-    // ==========================================
-    // Reemplaza con tu número de teléfono real (con código de país, ej: 549 para Argentina, 34 para España)
-    const numeroTelefonoNegocio = "5491123456789"; 
-    
-    const mensajeWhatsApp = `Hola, quiero confirmar una cita:\n\n` +
-      `👤 *Nombre:* ${nombre}\n` +
-      `📅 *Fecha:* ${fechaFormateada}\n` +
-      `⏰ *Hora:* ${horaSeleccionada} hs\n` +
-      `📞 *Contacto:* ${telefono || "No especificado"}`;
+      // ==========================================
+      // CONEXIÓN CON LA API (POST /api/appointments)
+      // ==========================================
+      const response = await fetch("/api/appointments", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          nombre,
+          email,
+          telefono,
+          fechaSeleccionada: fechaFormatoString,
+          horaSeleccionada,
+        }),
+      });
 
-    // Codificamos el texto para que sea válido en una URL
-    const urlWhatsApp = `https://wa.me/${1127873979}?text=${encodeURIComponent(mensajeWhatsApp)}`;
-    
-    // Abre WhatsApp en una nueva pestaña
-    window.open(urlWhatsApp, "_blank");
+      const resultado = await response.json();
+
+      // Si ocurre un error en el servidor, detenemos el proceso
+      if (!response.ok) {
+        console.error("Error devuelto por la API:", resultado);
+        alert(`Error al guardar la cita: ${resultado.error || "Inténtalo de nuevo"}`);
+        return;
+      }
+
+      console.log("¡Éxito! Cita y Usuario guardados/actualizados en Neon:", resultado.cita);
+
+      // ==========================================
+      // LOGICA DE ENVÍO A WHATSAPP (Se ejecuta si se guardó con éxito)
+      // ==========================================
+      const fechaFormateada = fechaSeleccionada.toLocaleDateString("es-ES", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+      });
+
+      const mensajeWhatsApp = `Hola, quiero confirmar una cita:\n\n` +
+        `👤 *Nombre:* ${nombre}\n` +
+        `📅 *Fecha:* ${fechaFormateada}\n` +
+        `⏰ *Hora:* ${horaSeleccionada} hs\n` +
+        `📞 *Contacto:* ${telefono || "No especificado"}`;
+
+      // Tu número configurado
+      const numeroTelefonoNegocio = "1127873979"; 
+      const urlWhatsApp = `https://wa.me/${numeroTelefonoNegocio}?text=${encodeURIComponent(mensajeWhatsApp)}`;
+      
+      // Abre WhatsApp en una nueva pestaña
+      window.open(urlWhatsApp, "_blank");
+
+      // Opcional: Limpiar el formulario o mostrar alerta de éxito
+      alert("¡Cita reservada con éxito!");
+
+    } catch (error) {
+      console.error("Error de conexión con la API:", error);
+      alert("No se pudo establecer conexión con el servidor local.");
+    }
   };
+
 
   // PANTALLA B: Formulario de Datos Personales
   if (pasoFormulario) {

@@ -21,14 +21,14 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id           String        @id @default(cuid())
-  name         String
-  email        String        @unique
-  phone        String?
-  createdAt    DateTime      @default(now())
-  appointments Appointment[]
-}
+//model User {
+// id           String        @id @default(cuid())
+//name         String
+  //email        String        @unique
+  //phone        String?
+ // createdAt    DateTime      @default(now())
+ // appointments Appointment[]
+//}
 
 model Appointment {
   id        String   @id @default(cuid())
@@ -37,4 +37,40 @@ model Appointment {
   dateTime  DateTime
   status    String   @default("PENDING")
   createdAt DateTime @default(now())
+}
+
+
+model User {
+  id            String         @id @default(cuid())
+  nombre        String
+  email         String         @unique
+  telefono      String?
+  createdAt     DateTime       @default(now())
+
+  // Relaciones (Opción B)
+  appointments  Appointment[]
+  expedientes   Expediente[]   
+  recordatorios Recordatorio[] 
+}
+
+model Expediente {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo      String   // Ej: "Resultado de análisis", "Informe Clínico"
+  notas       String?  // Detalles u observaciones
+  imagenUrl   String?  // URL de la imagen del informe en la nube
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Recordatorio {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo      String   // Ej: "Control de rutina", "Enviar mensaje de seguimiento"
+  descripcion String?
+  fechaHora   DateTime // Cuándo debe realizarse la actividad
+  completado  Boolean  @default(false)
+  createdAt   DateTime @default(now())
 }
