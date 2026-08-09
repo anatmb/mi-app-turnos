@@ -4,17 +4,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-const databaseUrl = process.env.DATABASE_URL;
-
+// Dejamos que Prisma busque automáticamente la variable DATABASE_URL del sistema.
+// Si no existe (como en el entorno local de build), le pasamos un string vacío seguro.
 export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
-    datasources: {
-      db: {
-        url: databaseUrl || "postgresql://mock:mock@localhost:5432/mock",
-      },
-    },
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  } as any); // 👈 Esto silencia el chequeo estricto de TypeScript solo durante el build
+  });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
