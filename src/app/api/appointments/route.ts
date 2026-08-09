@@ -1,49 +1,38 @@
-// export const dynamic = "force-dynamic";
-// import { NextResponse } from "next/server";
-// import { appointmentController } from "@/controllers/appointmentController";
-
-// export async function POST(request: Request) {
-//   try {
-//     const body = await request.json();
-//     const nuevaCita = await appointmentController.create(body);
-//     return NextResponse.json({ success: true, cita: nuevaCita }, { status: 201 });
-//   } catch (error) {
-//     console.error("Error al crear cita:", error);
-//     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
-//   }
-// }
-
-// export async function GET() {
-//   try {
-//     const citas = await appointmentController.getAll();
-//     return NextResponse.json({ success: true, citas });
-//   } catch (error) {
-//     return NextResponse.json({ error: "Error al obtener citas" }, { status: 500 });
-//   }
-// }
-
 export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { appointmentController } from "@/controllers/appointmentController";
 
-export async function POST(request: Request) {
+// 🛡️ Escudo para saltarnos el análisis de Turbopack en el build
+const isBuilding = process.env.NEXT_PHASE === "phase-production-build" || process.env.CI === "true";
+
+export async function GET() {
+  if (isBuilding) return NextResponse.json([]);
+
   try {
-    const body = await request.json();
-    const nuevaCita = await appointmentController.create(body);
-    return NextResponse.json({ success: true, cita: nuevaCita }, { status: 201 });
+    const appointments = await appointmentController.getAll();
+    return NextResponse.json(appointments);
   } catch (error) {
-    console.error("Error al crear cita:", error);
-    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al obtener las citas" },
+      { status: 500 }
+    );
   }
 }
 
-// 💡 Agregamos 'request: Request' aquí para romper el pre-renderizado estático
-export async function GET(request: Request) {
+export async function POST(request: Request) {
+  if (isBuilding) return NextResponse.json({ success: true });
+
   try {
-    const citas = await appointmentController.getAll();
-    return NextResponse.json({ success: true, citas });
+    const body = await request.json();
+    const newAppointment = await appointmentController.create(body);
+    return NextResponse.json(newAppointment, { status: 201 });
   } catch (error) {
-    console.error("Error al obtener citas:", error);
-    return NextResponse.json({ error: "Error al obtener citas" }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: "Error al crear la cita" },
+      { status: 500 }
+    );
   }
 }
