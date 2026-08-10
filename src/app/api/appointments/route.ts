@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
-import { appointmentController } from "@/lib/appointmentController"; // Ajusta la ruta a donde guardes tu controlador
+import { appointmentController } from "@/controllers/appointmentController"; //  ¡Ruta real! // Ajusta la ruta a donde guardes tu controlador
 
 export async function GET() {
   try {
