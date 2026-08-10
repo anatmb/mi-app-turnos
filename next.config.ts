@@ -3,7 +3,12 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.43"],
   
-  // Ignoramos los bloqueos estrictos en el build para que Vercel termine sin trabarse
+  // Esto obliga al compilador a tratar a Prisma de manera segura en el entorno aislado de Vercel
+  transpilePackages: ["@prisma/client"],
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client"],
+  },
+
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -11,7 +16,5 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
 };
-
-// Un comentario para obligar a Git a actualizar 7.8
 
 export default nextConfig;
