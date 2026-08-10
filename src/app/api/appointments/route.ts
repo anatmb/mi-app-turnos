@@ -1,5 +1,8 @@
 export const dynamic = "force-dynamic";
 
+export const dynamicParams = true;
+export const revalidate = 0; // 👈 Le dice a Next.
+
 import { NextResponse } from "next/server";
 import { appointmentController } from "@/controllers/appointmentController"; //  ¡Ruta real! // Ajusta la ruta a donde guardes tu controlador
 
