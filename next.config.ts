@@ -12,4 +12,6 @@ const nextConfig: NextConfig = {
   },
 };
 
+// Un comentario para obligar a Git a actualizar 7.8
+
 export default nextConfig;
