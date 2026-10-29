@@ -1,0 +1,92 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+
+model Doctor {
+  id           String   @id @default(uuid())
+  nombre       String
+  apellido     String
+  email        String   @unique
+  telefono     String?
+  especialidad String?
+  password     String   // Guardaremos el hash, nunca la clave plana
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  passwordResetTokens PasswordResetToken[]
+}
+
+model Appointment {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  dateTime  DateTime
+  status    String   @default("PENDING")
+  reminderSentAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+
+model User {
+  id           String        @id @default(cuid())
+  dni          String        @unique // <-- Debe ser único para buscar por DNI
+  nombre       String
+  email        String?       // Ahora el email puede ser opcional
+  telefono     String?
+  tieneObraSocial Boolean @default(false)
+  obraSocial   String?
+  activo       Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  // Relaciones (Opción B)
+  appointments  Appointment[]
+  expedientes   Expediente[]   
+  recordatorios Recordatorio[] 
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  doctorId  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  doctor    Doctor   @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@index([doctorId])
+}
+
+model Expediente {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo      String   // Ej: "Resultado de análisis", "Informe Clínico"
+  notas       String?  // Detalles u observaciones
+  imagenUrl   String?  // URL de la imagen del informe en la nube
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Recordatorio {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  titulo      String   // Ej: "Control de rutina", "Enviar mensaje de seguimiento"
+  descripcion String?
+  fechaHora   DateTime // Cuándo debe realizarse la actividad
+  completado  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
